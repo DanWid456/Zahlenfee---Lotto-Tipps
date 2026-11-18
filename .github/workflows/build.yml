@@ -32,6 +32,12 @@ jobs:
           if [ -d ios/Runner/Assets.xcassets/AppIcon.appiconset ]; then
             cp branding/ios/AppIcon.appiconset/*.png ios/Runner/Assets.xcassets/AppIcon.appiconset/
           fi
+      - name: Internet-Berechtigung (fehlt in der Flutter-Vorlage für Release-Builds)
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          grep -q 'android.permission.INTERNET' "$M" || \
+            sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <application#' "$M"
+          grep -n 'INTERNET' "$M"
       - name: App-Name unter dem Symbol
         run: |
           sed -i 's/android:label="[^"]*"/android:label="Zahlenfee"/' android/app/src/main/AndroidManifest.xml
