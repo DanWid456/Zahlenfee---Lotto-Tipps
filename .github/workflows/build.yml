@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write   # für das Release mit der APK
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -52,8 +55,29 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
-      - run: flutter build apk --release
+      - name: Fester Signaturschlüssel (sonst lässt Android kein Update über die alte Version zu)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::Secret ANDROID_DEBUG_KEYSTORE fehlt – APK wird mit wechselndem Schlüssel signiert, Updates schlagen fehl."
+          else
+            mkdir -p ~/.android
+            echo "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          fi
+      - name: APK bauen (Version 0.1.<Laufnummer>)
+        run: |
+          flutter build apk --release --build-name=0.1.${{ github.run_number }} --build-number=${{ github.run_number }}
+          cp build/app/outputs/flutter-apk/app-release.apk zahlenfee.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: lotto-vorschlag-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: zahlenfee-apk
+          path: zahlenfee.apk
+      - name: Release veröffentlichen (für das Update in der App)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.${{ github.run_number }}
+          name: Zahlenfee 0.1.${{ github.run_number }}
+          files: zahlenfee.apk
+          make_latest: true
