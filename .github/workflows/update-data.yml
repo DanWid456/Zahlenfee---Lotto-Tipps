@@ -25,4 +25,5 @@ jobs:
           git config user.name "lotto-data-bot"
           git config user.email "actions@users.noreply.github.com"
           git commit -am "Ziehungsdaten $(date -u +%F)"
+          git pull --rebase
           git push
