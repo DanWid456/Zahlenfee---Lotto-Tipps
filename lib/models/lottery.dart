@@ -277,3 +277,57 @@ const Map<String, String> kRegionsDE = {
   'SH': 'Schleswig-Holstein',
   'TH': 'Thüringen',
 };
+
+/// Jackpot der nächsten Ziehung (aus jackpot.json).
+class Jackpot {
+  const Jackpot({
+    required this.lottery,
+    required this.country,
+    required this.amount,
+    required this.currency,
+    required this.kind,
+    required this.fetched,
+  });
+
+  final String lottery;
+  final String country;
+  final int amount;
+  final String currency; // CHF | EUR
+  final String kind; // jackpot | guaranteed
+  final DateTime fetched;
+
+  bool get guaranteed => kind == 'guaranteed';
+
+  factory Jackpot.fromJson(Map<String, dynamic> j) => Jackpot(
+        lottery: j['lottery'] as String,
+        country: j['country'] as String,
+        amount: (j['amount'] as num).round(),
+        currency: j['currency'] as String,
+        kind: j['kind'] as String? ?? 'jackpot',
+        fetched: DateTime.parse(j['fetched'] as String),
+      );
+
+  /// Ältere Werte gelten als veraltet und werden nicht angezeigt.
+  bool isFresh(DateTime now) => now.difference(fetched).inDays < 4;
+}
+
+/// "CHF 45,8 Mio." / "€ 37 Mio." / "€ 1,2 Mio." – Dezimalkomma ausser Englisch.
+String formatAmount(int amount, String currency, String lang) {
+  final sym = currency == 'EUR' ? '€' : currency;
+  final sep = lang == 'en' ? '.' : ',';
+  if (amount >= 1000000) {
+    final m = amount / 1000000;
+    var s = m >= 100 || m == m.roundToDouble() ? m.round().toString() : m.toStringAsFixed(1);
+    s = s.replaceAll('.', sep);
+    final unit = {'de': 'Mio.', 'fr': 'mio', 'it': 'mln', 'en': 'm'}[lang] ?? 'Mio.';
+    return '$sym $s $unit';
+  }
+  final digits = amount.toString();
+  final group = lang == 'en' ? ',' : (lang == 'de' ? "'" : ' ');
+  final b = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) b.write(group);
+    b.write(digits[i]);
+  }
+  return '$sym $b';
+}

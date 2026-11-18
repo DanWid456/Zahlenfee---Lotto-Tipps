@@ -22,6 +22,13 @@ class S {
     'generate': {'de': 'Neue Vorschläge', 'fr': 'Nouvelles suggestions', 'it': 'Nuove proposte', 'en': 'New picks'},
     'lastDraw': {'de': 'Letzte Ziehung {date}', 'fr': 'Dernier tirage {date}', 'it': 'Ultima estrazione {date}', 'en': 'Last draw {date}'},
     'nextDraw': {'de': 'Nächste Ziehung {day}', 'fr': 'Prochain tirage {day}', 'it': 'Prossima estrazione {day}', 'en': 'Next draw {day}'},
+    'jackpotNext': {'de': 'Jackpot nächste Ziehung', 'fr': 'Jackpot du prochain tirage', 'it': 'Jackpot prossima estrazione', 'en': 'Next jackpot'},
+    'guaranteedNext': {
+      'de': 'Garantiert im Sechser-Rang',
+      'fr': 'Garanti au 1er rang',
+      'it': 'Garantito al 1° premio',
+      'en': 'Guaranteed top prize'
+    },
     'deadline': {'de': 'Annahmeschluss', 'fr': 'Clôture des mises', 'it': 'Chiusura giocate', 'en': 'Entry deadline'},
     'tipUntil': {'de': 'Tippen bis {day}, {time} Uhr', 'fr': 'Jouer jusqu\'au {day}, {time}', 'it': 'Giocare entro {day}, ore {time}', 'en': 'Play until {day}, {time}'},
     'leftDays': {'de': 'noch {d} T {h} Std', 'fr': 'encore {d} j {h} h', 'it': 'ancora {d} g {h} h', 'en': '{d} d {h} h left'},

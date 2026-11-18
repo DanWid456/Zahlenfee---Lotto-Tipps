@@ -45,6 +45,12 @@ class _LottoAppState extends State<LottoApp> with WidgetsBindingObserver {
   /// Automatisches Update: einen Tag nach jeder fälligen Ziehung.
   Future<void> _autoUpdate() async {
     final s = widget.settings;
+    // Jackpots: klein und schnell, höchstens alle 3 Stunden
+    final lj = s.lastJackpotCheck;
+    if (lj == null || DateTime.now().difference(lj).inHours >= 3) {
+      s.lastJackpotCheck = DateTime.now();
+      widget.repo.updateJackpots();
+    }
     if (!widget.repo.updateDue(DateTime.now(), s.lastUpdateCheck)) return;
     s.lastUpdateCheck = DateTime.now();
     await widget.repo.update();

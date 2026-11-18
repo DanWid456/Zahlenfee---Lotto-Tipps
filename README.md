@@ -38,6 +38,17 @@ Play-Store-Titel: **Zahlenfee – Lotto-Tipps** (FR: «Zahlenfee – Grilles Lot
 
 Bei jedem Push baut `build.yml` die App, führt `flutter analyze` und die Tests aus und legt die APK als Artefakt ab.
 
+## Jackpot-Anzeige
+`tools/update_jackpots.py` (Workflow `update-jackpots.yml`, alle 3 Stunden) schreibt
+`assets/data/jackpot.json`. Quellen sind die Daten, die die offiziellen Websites selbst laden:
+- Swisslos: Gewinnzahlen-Seiten (Swiss Lotto, EuroMillions in CHF), Zeile «Jackpot nächste Ziehung»
+- Österreichische Lotterien: `https://www.lotterien.at/api/jackpot/all` (Lotto 6 aus 45, EuroMillionen in EUR)
+- LOTTO.de: `/api/stats/entities.lotto/last` und `/api/stats/entities.eurojackpot/last`, Feld `jackpotNew` (Mio. €)
+
+Ist ein Wert älter als 4 Tage, blendet die App ihn aus. Ändert eine Website ihr Format, meldet
+der Workflow das im Log, und die App zeigt bis zur Anpassung keinen Jackpot für diese Lotterie.
+Vor dem Release: Nutzungsbedingungen der drei Websites prüfen bzw. die Lotteriegesellschaften fragen.
+
 ## App-Symbol
 Vorlage: `branding/icon.svg` (Zauberstab mit Lotto-Kugel). Nach Änderungen neu erzeugen:
 ```bash

@@ -15,6 +15,59 @@ class DrawRepository extends ChangeNotifier {
   final Map<String, List<Draw>> _draws = {};
   final Map<String, Set<String>> _mainKeys = {};
   final Map<String, Set<String>> _fullKeys = {};
+  List<Jackpot> _jackpots = const [];
+
+  /// Gültige Jackpots einer Lotterie für das Land (bei "ALL" alle Länder).
+  List<Jackpot> jackpots(String lottery, String country, DateTime now) => [
+        for (final j in _jackpots)
+          if (j.lottery == lottery && (country == 'ALL' || j.country == country) && j.isFresh(now)) j,
+      ];
+
+  static List<Jackpot> parseJackpots(String json) =>
+      ((jsonDecode(json) as Map<String, dynamic>)['jackpots'] as List)
+          .map((e) => Jackpot.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+  /// Lädt jackpot.json (mitgeliefert, lokal oder vom Server) – der neueste Stand gewinnt.
+  Future<bool> updateJackpots({bool remote = true}) async {
+    final dir = await _dir();
+    final local = File('${dir.path}/jackpot.json');
+    var list = <Jackpot>[];
+    try {
+      list = parseJackpots(await rootBundle.loadString('assets/data/jackpot.json'));
+    } catch (_) {}
+    void takeNewer(List<Jackpot> other) {
+      final m = {for (final j in list) '${j.lottery}/${j.country}': j};
+      for (final j in other) {
+        final k = '${j.lottery}/${j.country}';
+        if (m[k] == null || j.fetched.isAfter(m[k]!.fetched)) m[k] = j;
+      }
+      list = m.values.toList();
+    }
+    if (local.existsSync()) {
+      try {
+        takeNewer(parseJackpots(await local.readAsString()));
+      } catch (_) {}
+    }
+    var ok = true;
+    if (remote) {
+      try {
+        final res = await http.get(Uri.parse('$kDataBaseUrl/jackpot.json')).timeout(const Duration(seconds: 15));
+        if (res.statusCode == 200) {
+          final body = utf8.decode(res.bodyBytes);
+          takeNewer(parseJackpots(body));
+          await local.writeAsString(body);
+        } else {
+          ok = false;
+        }
+      } catch (_) {
+        ok = false;
+      }
+    }
+    _jackpots = list;
+    notifyListeners();
+    return ok;
+  }
 
   List<Draw> draws(String code) => _draws[code] ?? const [];
   Set<String> drawnMainKeys(String code) => _mainKeys[code] ?? const {};
@@ -46,7 +99,7 @@ class DrawRepository extends ChangeNotifier {
       }
       _set(lot.code, list);
     }
-    notifyListeners();
+    await updateJackpots(remote: false);
   }
 
   void _set(String code, List<Draw> list) {

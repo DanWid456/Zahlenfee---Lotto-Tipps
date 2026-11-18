@@ -1,0 +1,45 @@
+{
+ "updated": "2026-11-18T19:00:00Z",
+ "jackpots": [
+  {
+   "lottery": "AT",
+   "country": "AT",
+   "amount": 1200000,
+   "currency": "EUR",
+   "kind": "guaranteed",
+   "fetched": "2026-11-18T19:00:00Z"
+  },
+  {
+   "lottery": "CH",
+   "country": "CH",
+   "amount": 45800000,
+   "currency": "CHF",
+   "kind": "jackpot",
+   "fetched": "2026-11-18T19:00:00Z"
+  },
+  {
+   "lottery": "EJ",
+   "country": "DE",
+   "amount": 10000000,
+   "currency": "EUR",
+   "kind": "jackpot",
+   "fetched": "2026-11-18T19:00:00Z"
+  },
+  {
+   "lottery": "EM",
+   "country": "AT",
+   "amount": 37000000,
+   "currency": "EUR",
+   "kind": "jackpot",
+   "fetched": "2026-11-18T19:00:00Z"
+  },
+  {
+   "lottery": "EM",
+   "country": "CH",
+   "amount": 34000000,
+   "currency": "CHF",
+   "kind": "jackpot",
+   "fetched": "2026-11-18T19:00:00Z"
+  }
+ ]
+}

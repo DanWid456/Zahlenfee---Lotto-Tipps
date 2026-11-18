@@ -170,6 +170,30 @@ class _LotteryCardState extends State<LotteryCard> {
               const SizedBox(height: 6),
               NumberRow(main: last.main, extras: lot.hasExtras ? last.extras : const [], size: 28),
             ],
+            for (final j in widget.repo.jackpots(lot.code, widget.settings.country, DateTime.now()))
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Row(
+                  children: [
+                    Icon(Icons.emoji_events_outlined, size: 18, color: theme.colorScheme.tertiary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(children: [
+                          TextSpan(text: '${s.t(j.guaranteed ? 'guaranteedNext' : 'jackpotNext')}: '),
+                          TextSpan(
+                            text: formatAmount(j.amount, j.currency, s.lang),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          if (widget.settings.country == 'ALL' && lot.deadlines.length > 1)
+                            TextSpan(text: ' (${j.country})'),
+                        ]),
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 10),
             DeadlineInfo(lot: lot, country: widget.settings.country, region: widget.settings.region),
             const SizedBox(height: 12),

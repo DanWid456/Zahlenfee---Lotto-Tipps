@@ -23,6 +23,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _update(S s) async {
     setState(() => _updating = true);
     final n = await widget.repo.update();
+    await widget.repo.updateJackpots();
+    widget.settings.lastJackpotCheck = DateTime.now();
     widget.settings.lastUpdateCheck = DateTime.now();
     if (!mounted) return;
     setState(() => _updating = false);

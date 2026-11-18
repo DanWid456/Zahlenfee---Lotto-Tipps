@@ -100,6 +100,14 @@ class AppSettings extends ChangeNotifier {
   set lastUpdateCheck(DateTime? v) =>
       _p.setInt('lastUpdateCheck', (v ?? DateTime.now()).millisecondsSinceEpoch);
 
+  DateTime? get lastJackpotCheck {
+    final ms = _p.getInt('lastJackpotCheck');
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  set lastJackpotCheck(DateTime? v) =>
+      _p.setInt('lastJackpotCheck', (v ?? DateTime.now()).millisecondsSinceEpoch);
+
   void _set(Future<bool> Function() write) {
     write();
     notifyListeners();

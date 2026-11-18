@@ -143,6 +143,23 @@ void main() {
     });
   });
 
+  group('Jackpot', () {
+    test('Format', () {
+      expect(formatAmount(45800000, 'CHF', 'de'), 'CHF 45,8 Mio.');
+      expect(formatAmount(37000000, 'EUR', 'de'), '€ 37 Mio.');
+      expect(formatAmount(1200000, 'EUR', 'en'), '€ 1.2 m');
+      expect(formatAmount(120000000, 'EUR', 'fr'), '€ 120 mio');
+    });
+    test('jackpot.json lesen, Land filtern, veraltete ausblenden', () {
+      final list = DrawRepository.parseJackpots(File('assets/data/jackpot.json').readAsStringSync());
+      expect(list.where((j) => j.lottery == 'EM').length, 2);
+      final at = list.firstWhere((j) => j.lottery == 'AT');
+      expect(at.guaranteed, isTrue);
+      expect(at.isFresh(at.fetched.add(const Duration(days: 3))), isTrue);
+      expect(at.isFresh(at.fetched.add(const Duration(days: 5))), isFalse);
+    });
+  });
+
   test('JSON-Format bleibt kompatibel', () {
     const d = Draw('2026-11-17', '', [5, 29, 35, 37, 38], [1, 2]);
     expect(Draw.fromJson(jsonDecode(jsonEncode(d.toJson())) as List).mainKey, '5-29-35-37-38');
