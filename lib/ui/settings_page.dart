@@ -28,8 +28,11 @@ class _SettingsPageState extends State<SettingsPage> {
     widget.settings.lastUpdateCheck = DateTime.now();
     if (!mounted) return;
     setState(() => _updating = false);
-    final msg = n < 0 ? s.t('updateFailed') : (n == 0 ? s.t('upToDate') : s.t('updated', {'n': n}));
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    final msg = n < 0
+        ? '${s.t('updateFailed')}\n${widget.repo.lastError ?? ''}'
+        : (n == 0 ? s.t('upToDate') : s.t('updated', {'n': n}));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg), duration: Duration(seconds: n < 0 ? 8 : 4)));
   }
 
   Future<void> _pickFrom(LotteryDef lot) async {

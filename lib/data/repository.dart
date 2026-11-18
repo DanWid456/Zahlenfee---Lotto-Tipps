@@ -17,6 +17,9 @@ class DrawRepository extends ChangeNotifier {
   final Map<String, Set<String>> _fullKeys = {};
   List<Jackpot> _jackpots = const [];
 
+  /// Grund des letzten Fehlers beim Aktualisieren (für die Meldung in den Einstellungen).
+  String? lastError;
+
   /// Gültige Jackpots einer Lotterie für das Land (bei "ALL" alle Länder).
   List<Jackpot> jackpots(String lottery, String country, DateTime now) => [
         for (final j in _jackpots)
@@ -141,6 +144,11 @@ class DrawRepository extends ChangeNotifier {
 
   /// Lädt neue Ziehungen. Rückgabe: Anzahl neuer Ziehungen, -1 bei Fehler.
   Future<int> update() async {
+    lastError = null;
+    if (kDataBaseUrl.contains('DEIN-GITHUB-NAME')) {
+      lastError = 'kDataBaseUrl in lib/config.dart ist noch nicht gesetzt';
+      return -1;
+    }
     var added = 0;
     var failed = false;
     final dir = await _dir();
@@ -151,6 +159,7 @@ class DrawRepository extends ChangeNotifier {
             .timeout(const Duration(seconds: 20));
         if (res.statusCode != 200) {
           failed = true;
+          lastError = 'HTTP ${res.statusCode}: $kDataBaseUrl/${lot.code}.json';
           continue;
         }
         final body = utf8.decode(res.bodyBytes);
@@ -165,8 +174,9 @@ class DrawRepository extends ChangeNotifier {
             'draws': merged.map((d) => d.toJson()).toList(),
           }));
         }
-      } catch (_) {
+      } catch (e) {
         failed = true;
+        lastError = '${e.runtimeType}: $kDataBaseUrl/${lot.code}.json';
       }
     }
     notifyListeners();
