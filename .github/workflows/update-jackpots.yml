@@ -1,0 +1,29 @@
+name: Jackpots aktualisieren
+
+on:
+  schedule:
+    # alle 3 Stunden; Quoten und neue Jackpots erscheinen nach jeder Ziehung
+    - cron: '23 */3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  jackpots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Jackpots holen
+        run: python tools/update_jackpots.py --out assets/data/jackpot.json
+      - name: Commit, falls sich etwas geändert hat
+        run: |
+          if git diff --quiet; then echo "Keine Änderung"; exit 0; fi
+          git config user.name "lotto-data-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -am "Jackpots $(date -u +'%F %H:%M')"
+          git pull --rebase
+          git push
