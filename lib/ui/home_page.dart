@@ -55,6 +55,7 @@ class HomePage extends StatelessWidget {
         builder: (context, _) => ListView(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           children: [
+            const UpdateBanner(),
             if (settings.region == null && settings.visibleLotteries.any((l) => l.hasRegions))
               _RegionBanner(settings: settings),
             for (final lot in settings.visibleLotteries)
@@ -146,7 +147,7 @@ class _LotteryCardState extends State<LotteryCard> {
       sumMax: sumMax,
     );
     setState(() {
-      _result = _gen.generate(count: st.seriesCount, mode: st.mode, stats: stats, filters: st.filters, ctx: ctx);
+      _result = _gen.generate(count: st.seriesCount, options: st.genOptions, stats: stats, filters: st.filters, ctx: ctx);
     });
   }
 

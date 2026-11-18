@@ -13,12 +13,8 @@ enum FilterId {
   sumOutlier, // Summe ausserhalb des üblichen Bereichs (5.–95. Perzentil)
 }
 
-const Set<FilterId> kDefaultFilters = {
-  FilterId.consecutive,
-  FilterId.alreadyDrawn,
-  FilterId.allEven,
-  FilterId.allOdd,
-};
+/// Standard: alles ausblenden ausser "ungewöhnliche Summe".
+final Set<FilterId> kDefaultFilters = {...FilterId.values}..remove(FilterId.sumOutlier);
 
 bool hasConsecutive(List<int> s, {int run = 3}) {
   var len = 1;

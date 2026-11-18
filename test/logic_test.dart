@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lotto_vorschlag/data/app_updater.dart';
 import 'package:lotto_vorschlag/data/repository.dart';
 import 'package:lotto_vorschlag/logic/filters.dart';
 import 'package:lotto_vorschlag/logic/generator.dart';
@@ -61,9 +62,16 @@ void main() {
           sumMax: hi,
         );
         final gen = Generator(lot, random: Random(42));
-        for (final mode in GenMode.values) {
-          final r = gen.generate(count: 20, mode: mode, stats: stats, filters: FilterId.values.toSet(), ctx: ctx);
-          expect(r.tips.length, 20, reason: mode.name);
+        const combos = [
+          GenOptions(preferRare: false),
+          GenOptions(),
+          GenOptions(preferRare: false, preferOverdue: true),
+          GenOptions(preferRare: true, preferOverdue: true),
+          GenOptions(preferRare: true, preferOverdue: true, unpopular: true),
+        ];
+        for (final opt in combos) {
+          final r = gen.generate(count: 20, options: opt, stats: stats, filters: FilterId.values.toSet(), ctx: ctx);
+          expect(r.tips.length, 20);
           expect(r.tips.map((t) => t.mainKey).toSet().length, 20);
           for (final t in r.tips) {
             expect(t.main.length, lot.mainCount);
@@ -85,9 +93,39 @@ void main() {
       final common = ranked.reversed.take(10).toSet();
       final ctx = FilterContext(drawnMainKeys: const {}, drawnFullKeys: const {}, compareWithExtras: false, sumMin: 0, sumMax: 999);
       final r = Generator(lot, random: Random(1))
-          .generate(count: 500, mode: GenMode.rare, stats: stats, filters: const {}, ctx: ctx);
+          .generate(count: 500, options: const GenOptions(), stats: stats, filters: const {}, ctx: ctx);
       final all = r.tips.expand((t) => t.main).toList();
       expect(all.where(rare.contains).length, greaterThan(all.where(common.contains).length * 3));
+    });
+
+    test('"Am längsten nicht gezogen" bevorzugt überfällige Zahlen', () {
+      final lot = lotteryByCode('EJ');
+      final draws = loadDraws('EJ');
+      final stats = NumberStats.compute(lot, draws, lot.currentRuleStart);
+      final ranked = [for (var n = 1; n <= 50; n++) n]..sort((a, b) => stats.mainLastSeen[b].compareTo(stats.mainLastSeen[a]));
+      final overdue = ranked.take(10).toSet();
+      final recent = ranked.reversed.take(10).toSet();
+      final ctx = FilterContext(drawnMainKeys: const {}, drawnFullKeys: const {}, compareWithExtras: false, sumMin: 0, sumMax: 999);
+      final r = Generator(lot, random: Random(3)).generate(
+          count: 500, options: const GenOptions(preferRare: false, preferOverdue: true), stats: stats, filters: const {}, ctx: ctx);
+      final all = r.tips.expand((t) => t.main).toList();
+      expect(all.where(overdue.contains).length, greaterThan(all.where(recent.contains).length * 3));
+      expect(stats.extraLastSeen.length, lot.extraMax + 1);
+    });
+
+    test('Rang-Gewichte: beide Kriterien kombiniert', () {
+      // Zahl 1: selten UND lange nicht gezogen -> höchstes Gewicht
+      final freq = [0, 1, 5, 9, 3];
+      final last = [0, 40, 2, 1, 30];
+      final w = Generator.rankWeights(1, 4, freq: freq, lastSeen: last)!;
+      expect(w[1], 1.0);
+      expect(w[1] > w[4] && w[4] > w[3], isTrue);
+      expect(Generator.rankWeights(1, 4), isNull);
+    });
+
+    test('Standard-Filter: alle ausser Summe', () {
+      expect(kDefaultFilters.contains(FilterId.sumOutlier), isFalse);
+      expect(kDefaultFilters.length, FilterId.values.length - 1);
     });
 
     test('Modus "unbeliebt" bevorzugt Zahlen über 31', () {
@@ -96,7 +134,7 @@ void main() {
       final stats = NumberStats.compute(lot, draws, lot.currentRuleStart);
       final ctx = FilterContext(drawnMainKeys: const {}, drawnFullKeys: const {}, compareWithExtras: false, sumMin: 0, sumMax: 999);
       final r = Generator(lot, random: Random(2))
-          .generate(count: 300, mode: GenMode.unpopular, stats: stats, filters: const {}, ctx: ctx);
+          .generate(count: 300, options: const GenOptions(preferRare: false, unpopular: true), stats: stats, filters: const {}, ctx: ctx);
       final all = r.tips.expand((t) => t.main).toList();
       // ohne Gewichtung wären 11/42 ≈ 26 % über 31
       expect(all.where((n) => n > 31).length / all.length, greaterThan(0.35));
@@ -158,6 +196,20 @@ void main() {
       expect(at.isFresh(at.fetched.add(const Duration(days: 3))), isTrue);
       expect(at.isFresh(at.fetched.add(const Duration(days: 5))), isFalse);
     });
+  });
+
+  test('App-Update: Release erkennen', () {
+    final rel = {
+      'tag_name': 'v0.1.14',
+      'html_url': 'https://github.com/x/y/releases/tag/v0.1.14',
+      'assets': [
+        {'name': 'zahlenfee.apk', 'browser_download_url': 'https://github.com/x/y/releases/download/v0.1.14/zahlenfee.apk'}
+      ],
+    };
+    final u = AppUpdater.parseRelease(rel, 12)!;
+    expect(u.buildNumber, 14);
+    expect(u.downloadUrl, endsWith('zahlenfee.apk'));
+    expect(AppUpdater.parseRelease(rel, 14), isNull);
   });
 
   test('JSON-Format bleibt kompatibel', () {

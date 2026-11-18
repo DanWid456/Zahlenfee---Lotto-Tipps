@@ -1,6 +1,8 @@
-/// Adresse, unter der die GitHub Action die aktuellen Ziehungsdaten ablegt
-/// (Ordner `data/` dieses Repos). Nach dem ersten Push anpassen.
-const String kDataBaseUrl = 'https://raw.githubusercontent.com/DanWid456/Zahlenfee---Lotto-Tipps/main/assets/data';
+/// GitHub-Repo der App (öffentlich): Datendateien, Jackpots und App-Updates.
+const String kGitHubRepo = 'DanWid456/Zahlenfee---Lotto-Tipps';
+
+/// Adresse, unter der die GitHub Actions die aktuellen Ziehungsdaten ablegen.
+const String kDataBaseUrl = 'https://raw.githubusercontent.com/$kGitHubRepo/main/assets/data';
 
 /// Frühestens so viele Stunden nach einer Ziehung wird nach Updates gesucht
 /// ("1 Tag nach Veröffentlichung").

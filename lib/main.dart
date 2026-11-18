@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'data/app_updater.dart';
 import 'data/repository.dart';
 import 'l10n/strings.dart';
 import 'settings/settings.dart';
@@ -45,6 +46,12 @@ class _LottoAppState extends State<LottoApp> with WidgetsBindingObserver {
   /// Automatisches Update: einen Tag nach jeder fälligen Ziehung.
   Future<void> _autoUpdate() async {
     final s = widget.settings;
+    // App-Update auf GitHub Releases: höchstens alle 6 Stunden
+    final la = s.lastAppUpdateCheck;
+    if (la == null || DateTime.now().difference(la).inHours >= 6) {
+      s.lastAppUpdateCheck = DateTime.now();
+      AppUpdater.check().then((u) => availableUpdate.value = u).catchError((_) => null);
+    }
     // Jackpots: klein und schnell, höchstens alle 3 Stunden
     final lj = s.lastJackpotCheck;
     if (lj == null || DateTime.now().difference(lj).inHours >= 3) {

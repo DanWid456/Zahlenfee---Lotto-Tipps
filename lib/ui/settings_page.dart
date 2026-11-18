@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../data/app_updater.dart';
 import '../data/repository.dart';
 import '../l10n/strings.dart';
 import '../logic/filters.dart';
-import '../logic/generator.dart';
 import '../models/lottery.dart';
 import '../settings/settings.dart';
 import 'widgets.dart';
@@ -19,6 +19,37 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _updating = false;
+  bool _checkingApp = false;
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    AppUpdater.currentVersion().then((v) {
+      if (mounted) setState(() => _version = v);
+    }).catchError((_) {});
+  }
+
+  Future<void> _checkApp(S s) async {
+    setState(() => _checkingApp = true);
+    String? msg;
+    try {
+      final u = await AppUpdater.check();
+      availableUpdate.value = u;
+      widget.settings.lastAppUpdateCheck = DateTime.now();
+      if (u != null && mounted) {
+        setState(() => _checkingApp = false);
+        await openUpdate(context, u);
+        return;
+      }
+      msg = s.t('appUpToDate');
+    } catch (e) {
+      msg = '${s.t('updateFailed')}\n$e';
+    }
+    if (!mounted) return;
+    setState(() => _checkingApp = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   Future<void> _update(S s) async {
     setState(() => _updating = true);
@@ -55,7 +86,14 @@ class _SettingsPageState extends State<SettingsPage> {
     final theme = Theme.of(context);
     Widget header(String key) => Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-          child: Text(s.t(key), style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
+          child: Text(
+            s.t(key).toUpperCase(),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+            ),
+          ),
         );
 
     return Scaffold(
@@ -119,14 +157,31 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               header('mode'),
-              for (final m in GenMode.values)
-                RadioListTile<GenMode>(
-                  value: m,
-                  groupValue: st.mode,
-                  onChanged: (v) => st.mode = v!,
-                  title: Text(s.t('mode_${m.name}')),
-                  subtitle: m == GenMode.unpopular ? Text(s.t('mode_unpopular_hint')) : null,
+              CheckboxListTile(
+                value: st.preferRare,
+                onChanged: (v) => st.preferRare = v!,
+                title: Text(s.t('opt_rare')),
+                subtitle: Text(s.t('opt_rare_hint')),
+              ),
+              CheckboxListTile(
+                value: st.preferOverdue,
+                onChanged: (v) => st.preferOverdue = v!,
+                title: Text(s.t('opt_overdue')),
+                subtitle: Text(s.t('opt_overdue_hint')),
+              ),
+              CheckboxListTile(
+                value: st.unpopular,
+                onChanged: (v) => st.unpopular = v!,
+                title: Text(s.t('mode_unpopular')),
+                subtitle: Text(s.t('mode_unpopular_hint')),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                child: Text(
+                  st.genOptions.pureRandom ? s.t('opt_none') : s.t('opt_note'),
+                  style: theme.textTheme.bodySmall,
                 ),
+              ),
               header('filters'),
               for (final f in FilterId.values) ...[
                 SwitchListTile(
@@ -179,6 +234,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       : const Icon(Icons.sync),
                   label: Text(s.t('updateNow')),
                 ),
+              ),
+              ListTile(
+                title: Text(s.t('appVersion')),
+                subtitle: Text(_version),
+                trailing: _checkingApp
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : TextButton(onPressed: () => _checkApp(s), child: Text(s.t('checkAppUpdate'))),
               ),
             ],
           );

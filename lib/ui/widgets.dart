@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../data/app_updater.dart';
 
 import '../l10n/strings.dart';
 import '../models/lottery.dart';
@@ -155,6 +158,48 @@ class NumberRow extends StatelessWidget {
         if (extras.isNotEmpty) SizedBox(width: size / 4),
         for (final e in extras) Ball(e, extra: true, size: size, highlight: hitExtras?.contains(e) ?? false),
       ],
+    );
+  }
+}
+
+
+Future<void> openUpdate(BuildContext context, AppUpdate u) async {
+  final s = S.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final ok = await launchUrl(Uri.parse(u.downloadUrl), mode: LaunchMode.externalApplication);
+  if (ok) messenger.showSnackBar(SnackBar(content: Text(s.t('installHint')), duration: const Duration(seconds: 8)));
+}
+
+/// Hinweis auf eine neue App-Version (GitHub Releases).
+class UpdateBanner extends StatelessWidget {
+  const UpdateBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final cs = Theme.of(context).colorScheme;
+    return ValueListenableBuilder<AppUpdate?>(
+      valueListenable: availableUpdate,
+      builder: (context, u, _) => u == null
+          ? const SizedBox.shrink()
+          : Card(
+              color: cs.tertiaryContainer,
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.system_update, color: cs.onTertiaryContainer),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(s.t('updateAvailable', {'v': u.version}),
+                          style: TextStyle(color: cs.onTertiaryContainer, fontWeight: FontWeight.w600)),
+                    ),
+                    TextButton(onPressed: () => openUpdate(context, u), child: Text(s.t('download'))),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }

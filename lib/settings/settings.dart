@@ -51,8 +51,28 @@ class AppSettings extends ChangeNotifier {
   int get seriesCount => _p.getInt('seriesCount') ?? 5;
   set seriesCount(int v) => _set(() => _p.setInt('seriesCount', v.clamp(1, 20).toInt()));
 
-  GenMode get mode => GenMode.values.byName(_p.getString('mode') ?? GenMode.rare.name);
-  set mode(GenMode v) => _set(() => _p.setString('mode', v.name));
+  // --- Vorschlagsart (kombinierbar). Übernahme der alten Einzelauswahl "mode".
+  bool _opt(String key, bool fallback) {
+    final v = _p.getBool(key);
+    if (v != null) return v;
+    final old = _p.getString('mode');
+    if (old == null) return fallback;
+    return switch (key) {
+      'preferRare' => old == 'rare',
+      'unpopular' => old == 'unpopular',
+      _ => false,
+    };
+  }
+
+  bool get preferRare => _opt('preferRare', true);
+  set preferRare(bool v) => _set(() => _p.setBool('preferRare', v));
+  bool get preferOverdue => _opt('preferOverdue', false);
+  set preferOverdue(bool v) => _set(() => _p.setBool('preferOverdue', v));
+  bool get unpopular => _opt('unpopular', false);
+  set unpopular(bool v) => _set(() => _p.setBool('unpopular', v));
+
+  GenOptions get genOptions =>
+      GenOptions(preferRare: preferRare, preferOverdue: preferOverdue, unpopular: unpopular);
 
   // --- Auswertungszeitraum pro Lotterie
   String analysisFrom(LotteryDef lot) => _p.getString('from_${lot.code}') ?? lot.currentRuleStart;
@@ -99,6 +119,14 @@ class AppSettings extends ChangeNotifier {
 
   set lastUpdateCheck(DateTime? v) =>
       _p.setInt('lastUpdateCheck', (v ?? DateTime.now()).millisecondsSinceEpoch);
+
+  DateTime? get lastAppUpdateCheck {
+    final ms = _p.getInt('lastAppUpdateCheck');
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  set lastAppUpdateCheck(DateTime? v) =>
+      _p.setInt('lastAppUpdateCheck', (v ?? DateTime.now()).millisecondsSinceEpoch);
 
   DateTime? get lastJackpotCheck {
     final ms = _p.getInt('lastJackpotCheck');

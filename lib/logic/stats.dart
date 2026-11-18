@@ -2,7 +2,7 @@ import '../models/lottery.dart';
 
 /// Häufigkeiten innerhalb eines Auswertungszeitraums.
 class NumberStats {
-  NumberStats._(this.mainFreq, this.extraFreq, this.mainLastSeen, this.drawCount);
+  NumberStats._(this.mainFreq, this.extraFreq, this.mainLastSeen, this.extraLastSeen, this.drawCount);
 
   /// Index = Zahl (Index 0 unbenutzt).
   final List<int> mainFreq;
@@ -10,6 +10,9 @@ class NumberStats {
 
   /// Anzahl Ziehungen seit dem letzten Auftreten (Index = Zahl).
   final List<int> mainLastSeen;
+
+  /// Dasselbe für die Zusatzzahlen (nur Ziehungen der aktuellen Regel).
+  final List<int> extraLastSeen;
   final int drawCount;
 
   /// [from]: ISO-Datum, ab dem ausgewertet wird. Für die Zusatzzahlen zählt
@@ -44,7 +47,20 @@ class NumberStats {
     for (var n = 1; n <= lot.mainMax; n++) {
       if (lastSeen[n] < 0) lastSeen[n] = age;
     }
-    return NumberStats._(mainFreq, extraFreq, lastSeen, count);
+    final extraLast = List<int>.filled(lot.extraMax + 1, -1);
+    if (lot.hasExtras) {
+      var eAge = 0;
+      for (var i = draws.length - 1; i >= 0 && draws[i].date.compareTo(lot.currentRuleStart) >= 0; i--) {
+        for (final e in draws[i].extras) {
+          if (e >= lot.extraMin && e <= lot.extraMax && extraLast[e] < 0) extraLast[e] = eAge;
+        }
+        eAge++;
+      }
+      for (var e = lot.extraMin; e <= lot.extraMax; e++) {
+        if (extraLast[e] < 0) extraLast[e] = eAge;
+      }
+    }
+    return NumberStats._(mainFreq, extraFreq, lastSeen, extraLast, count);
   }
 }
 

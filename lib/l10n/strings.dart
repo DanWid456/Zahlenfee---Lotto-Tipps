@@ -22,6 +22,22 @@ class S {
     'generate': {'de': 'Neue Vorschläge', 'fr': 'Nouvelles suggestions', 'it': 'Nuove proposte', 'en': 'New picks'},
     'lastDraw': {'de': 'Letzte Ziehung {date}', 'fr': 'Dernier tirage {date}', 'it': 'Ultima estrazione {date}', 'en': 'Last draw {date}'},
     'nextDraw': {'de': 'Nächste Ziehung {day}', 'fr': 'Prochain tirage {day}', 'it': 'Prossima estrazione {day}', 'en': 'Next draw {day}'},
+    'updateAvailable': {
+      'de': 'Neue Version {v} verfügbar',
+      'fr': 'Nouvelle version {v} disponible',
+      'it': 'Nuova versione {v} disponibile',
+      'en': 'New version {v} available'
+    },
+    'download': {'de': 'Herunterladen', 'fr': 'Télécharger', 'it': 'Scarica', 'en': 'Download'},
+    'appVersion': {'de': 'App-Version', 'fr': 'Version de l\'app', 'it': 'Versione app', 'en': 'App version'},
+    'checkAppUpdate': {'de': 'Nach App-Update suchen', 'fr': 'Rechercher une mise à jour', 'it': 'Cerca aggiornamento app', 'en': 'Check for app update'},
+    'appUpToDate': {'de': 'Die App ist aktuell', 'fr': 'L\'app est à jour', 'it': 'L\'app è aggiornata', 'en': 'The app is up to date'},
+    'installHint': {
+      'de': 'Nach dem Download die Datei öffnen. Beim ersten Mal fragt Android, ob der Browser Apps installieren darf.',
+      'fr': 'Ouvrez le fichier après le téléchargement. La première fois, Android demande d\'autoriser le navigateur à installer des apps.',
+      'it': 'Apri il file dopo il download. La prima volta Android chiede di consentire al browser di installare app.',
+      'en': 'Open the file after downloading. The first time, Android asks whether the browser may install apps.'
+    },
     'jackpotNext': {'de': 'Jackpot nächste Ziehung', 'fr': 'Jackpot du prochain tirage', 'it': 'Jackpot prossima estrazione', 'en': 'Next jackpot'},
     'guaranteedNext': {
       'de': 'Garantiert im Sechser-Rang',
@@ -71,8 +87,37 @@ class S {
     'AT': {'de': 'Österreich', 'fr': 'Autriche', 'it': 'Austria', 'en': 'Austria'},
     'seriesCount': {'de': 'Anzahl Serien', 'fr': 'Nombre de séries', 'it': 'Numero di serie', 'en': 'Number of series'},
     'mode': {'de': 'Vorschlagsart', 'fr': 'Type de suggestion', 'it': 'Tipo di proposta', 'en': 'Pick mode'},
-    'mode_rare': {'de': 'Seltene Zahlen bevorzugen', 'fr': 'Privilégier les numéros rares', 'it': 'Preferire i numeri rari', 'en': 'Prefer rare numbers'},
-    'mode_random': {'de': 'Reiner Zufall', 'fr': 'Pur hasard', 'it': 'Puro caso', 'en': 'Pure random'},
+    'opt_rare': {'de': 'Seltene Zahlen bevorzugen', 'fr': 'Privilégier les numéros rares', 'it': 'Preferire i numeri rari', 'en': 'Prefer rare numbers'},
+    'opt_rare_hint': {
+      'de': 'Zahlen, die im Auswertungszeitraum am seltensten gezogen wurden',
+      'fr': 'Numéros les moins tirés sur la période analysée',
+      'it': 'Numeri estratti più raramente nel periodo analizzato',
+      'en': 'Numbers drawn least often in the analysis period'
+    },
+    'opt_overdue': {
+      'de': 'Am längsten nicht gezogene Zahlen bevorzugen',
+      'fr': 'Privilégier les numéros absents depuis longtemps',
+      'it': 'Preferire i numeri ritardatari',
+      'en': 'Prefer numbers not drawn for longest'
+    },
+    'opt_overdue_hint': {
+      'de': 'Zahlen, die seit den meisten Ziehungen nicht mehr gekommen sind',
+      'fr': 'Numéros non sortis depuis le plus grand nombre de tirages',
+      'it': 'Numeri non usciti da più estrazioni',
+      'en': 'Numbers absent for the most draws'
+    },
+    'opt_none': {
+      'de': 'Nichts gewählt: reiner Zufall.',
+      'fr': 'Rien de choisi : pur hasard.',
+      'it': 'Nessuna scelta: puro caso.',
+      'en': 'Nothing selected: pure random.'
+    },
+    'opt_note': {
+      'de': 'Kombinierbar. Keine Option verändert die Gewinnchance – jede Kombination ist gleich wahrscheinlich.',
+      'fr': 'Combinables. Aucune option ne change les chances : chaque combinaison est également probable.',
+      'it': 'Combinabili. Nessuna opzione cambia le probabilità: ogni combinazione è ugualmente probabile.',
+      'en': 'Can be combined. No option changes your odds – every combination is equally likely.'
+    },
     'mode_unpopular': {'de': 'Unbeliebte Kombinationen', 'fr': 'Combinaisons peu jouées', 'it': 'Combinazioni poco giocate', 'en': 'Unpopular combinations'},
     'mode_unpopular_hint': {
       'de': 'Bevorzugt Zahlen über 31 und vermeidet Muster. Erhöht nicht die Gewinnchance, aber im Gewinnfall muss seltener geteilt werden.',

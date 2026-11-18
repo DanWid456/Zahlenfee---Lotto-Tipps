@@ -38,6 +38,22 @@ Play-Store-Titel: **Zahlenfee – Lotto-Tipps** (FR: «Zahlenfee – Grilles Lot
 
 Bei jedem Push baut `build.yml` die App, führt `flutter analyze` und die Tests aus und legt die APK als Artefakt ab.
 
+## App-Updates (ohne Play Store)
+Jeder Push auf `main` baut die APK als Version `0.1.<Laufnummer>` und veröffentlicht sie als
+GitHub-Release (`zahlenfee.apk`). Die App prüft beim Öffnen (höchstens alle 6 h) bzw. in den
+Einstellungen mit «Nach App-Update suchen» das neueste Release und bietet den Download an.
+
+**Einmalig einrichten:** Repo › Settings › Secrets and variables › Actions › New repository secret,
+Name `ANDROID_DEBUG_KEYSTORE`, Wert = Inhalt von `ANDROID_DEBUG_KEYSTORE.txt` (Base64 des Keystores).
+Ohne festen Schlüssel signiert jeder Build anders, und Android verweigert das Update.
+Eigenen Schlüssel erzeugen statt den gelieferten zu nutzen:
+```bash
+keytool -genkeypair -keystore debug.keystore -storepass android -keypass android \
+  -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Zahlenfee"
+base64 -w0 debug.keystore   # Windows: certutil -encode debug.keystore out.txt
+```
+Für den Play Store braucht es später einen eigenen Upload-Schlüssel; dort laufen Updates über Google.
+
 ## Jackpot-Anzeige
 `tools/update_jackpots.py` (Workflow `update-jackpots.yml`, alle 3 Stunden) schreibt
 `assets/data/jackpot.json`. Quellen sind die Daten, die die offiziellen Websites selbst laden:

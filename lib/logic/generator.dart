@@ -4,19 +4,25 @@ import '../models/lottery.dart';
 import 'filters.dart';
 import 'stats.dart';
 
-enum GenMode {
-  /// Reiner Zufall, jede Zahl gleich wahrscheinlich.
-  random,
+/// Vorschlagsart – die Optionen sind frei kombinierbar. Ist keine aktiv,
+/// wird reiner Zufall verwendet.
+class GenOptions {
+  const GenOptions({this.preferRare = true, this.preferOverdue = false, this.unpopular = false});
 
-  /// Selten gezogene Zahlen werden bevorzugt (nach Rang gewichtet).
-  rare,
+  /// Selten gezogene Zahlen (Häufigkeit im Auswertungszeitraum) bevorzugen.
+  final bool preferRare;
 
-  /// Zahlen über 31 werden bevorzugt, Muster vermieden – Kombinationen, die
-  /// wenige andere Leute tippen (im Gewinnfall muss seltener geteilt werden).
-  unpopular,
+  /// Am längsten nicht mehr gezogene Zahlen bevorzugen.
+  final bool preferOverdue;
+
+  /// Zahlen über 31 bevorzugen und Muster vermeiden – Kombinationen, die wenige
+  /// andere Leute tippen (im Gewinnfall muss seltener geteilt werden).
+  final bool unpopular;
+
+  bool get pureRandom => !preferRare && !preferOverdue && !unpopular;
 }
 
-/// Filter, die im Modus "unbeliebte Kombinationen" immer aktiv sind.
+/// Filter, die bei "unbeliebte Kombinationen" immer aktiv sind.
 const Set<FilterId> kUnpopularFilters = {
   FilterId.consecutive,
   FilterId.progression,
@@ -37,15 +43,27 @@ class Generator {
   final LotteryDef lot;
   final Random _rnd;
 
-  /// Gewichtung nach Rang: seltenste Zahl Gewicht 1.0, häufigste ≈ e^-k.
+  /// Gewichtung nach Rang: bevorzugteste Zahl Gewicht 1.0, letzte ≈ e^-k.
   /// Die Häufigkeiten liegen nahe beieinander; ein Rang-Gewicht macht die
   /// Bevorzugung spürbar, ohne dass immer dieselbe Serie herauskommt.
-  static List<double> rankWeights(List<int> freq, int minN, int maxN, {double k = 2.5}) {
-    final nums = [for (var n = minN; n <= maxN; n++) n]..sort((a, b) => freq[a].compareTo(freq[b]));
+  /// [freq]: selten zuerst; [lastSeen]: lange nicht gezogen zuerst; beide
+  /// angegeben: Mittel der beiden Ränge.
+  static List<double>? rankWeights(int minN, int maxN, {List<int>? freq, List<int>? lastSeen, double k = 2.5}) {
+    if (freq == null && lastSeen == null) return null;
+    final nums = [for (var n = minN; n <= maxN; n++) n];
+    final score = <int, double>{for (final n in nums) n: 0};
+    void addRanks(List<int> order) {
+      for (var r = 0; r < order.length; r++) {
+        score[order[r]] = score[order[r]]! + r;
+      }
+    }
+    if (freq != null) addRanks([...nums]..sort((a, b) => freq[a].compareTo(freq[b])));
+    if (lastSeen != null) addRanks([...nums]..sort((a, b) => lastSeen[b].compareTo(lastSeen[a])));
+    final order = [...nums]..sort((a, b) => score[a]!.compareTo(score[b]!));
     final w = List<double>.filled(maxN + 1, 0);
-    final span = max(nums.length - 1, 1);
-    for (var r = 0; r < nums.length; r++) {
-      w[nums[r]] = exp(-k * r / span);
+    final span = max(order.length - 1, 1);
+    for (var r = 0; r < order.length; r++) {
+      w[order[r]] = exp(-k * r / span);
     }
     return w;
   }
@@ -73,24 +91,25 @@ class Generator {
 
   GenResult generate({
     required int count,
-    required GenMode mode,
+    required GenOptions options,
     required NumberStats stats,
     required Set<FilterId> filters,
     required FilterContext ctx,
     int maxAttemptsPerTip = 20000,
   }) {
-    List<double>? mainW;
-    List<double>? extraW;
-    switch (mode) {
-      case GenMode.random:
-        break;
-      case GenMode.rare:
-        mainW = rankWeights(stats.mainFreq, 1, lot.mainMax);
-        if (lot.hasExtras) extraW = rankWeights(stats.extraFreq, lot.extraMin, lot.extraMax);
-      case GenMode.unpopular:
-        mainW = [for (var n = 0; n <= lot.mainMax; n++) n > 31 ? 2.0 : 1.0];
+    var mainW = rankWeights(1, lot.mainMax,
+        freq: options.preferRare ? stats.mainFreq : null,
+        lastSeen: options.preferOverdue ? stats.mainLastSeen : null);
+    final extraW = lot.hasExtras
+        ? rankWeights(lot.extraMin, lot.extraMax,
+            freq: options.preferRare ? stats.extraFreq : null,
+            lastSeen: options.preferOverdue ? stats.extraLastSeen : null)
+        : null;
+    if (options.unpopular) {
+      final base = mainW ?? List<double>.filled(lot.mainMax + 1, 1);
+      mainW = [for (var n = 0; n <= lot.mainMax; n++) n > 31 ? base[n] * 2 : base[n]];
     }
-    final active = {...filters, if (mode == GenMode.unpopular) ...kUnpopularFilters};
+    final active = {...filters, if (options.unpopular) ...kUnpopularFilters};
     final tips = <Tip>[];
     final seen = <String>{};
     for (var t = 0; t < count; t++) {
